@@ -3,8 +3,7 @@
 * Web browser (Google Chrome will be the best choice)
 
 ## Running files
-If you run files directly, without using a server, then you will,  
-probably, want to run Chrome with an additional flag:
+If you run files directly, without using a server, then you will, probably, want to run Chrome with an additional flag:
 
 * `--allow-file-access-from-files` or
 * `--disable-web-security`
@@ -40,3 +39,6 @@ http://auduno.github.io/clmtrackr/media/facemodel_numbering_new.png
 
 ## Source code repository
 https://github.com/Foat/computer-vision-for-the-web
+
+## License
+MIT: http://foat.mit-license.org
