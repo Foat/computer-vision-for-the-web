@@ -11,7 +11,7 @@ If you run files directly, without using a server, then you will, probably, want
 e.g. for windows just run in console `chrome.exe --allow-file-access-from-files`,  
 for OS X: ```/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --allow-file-access-from-files```
 
-## Photo and video sources:
+## Photo and video sources
 
 ### chapter 1
 http://www.freestockphotos.biz/stockphoto/6063  
