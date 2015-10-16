@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>chapter 4, bbf face detection with jsfeat</title>
+    <link rel="stylesheet" href="../css/cvw.css">
+    <script src="../js/jsfeat-min.js"></script>
+    <script src="../data/bbf_face.js"></script>
+</head>
+<body>
+<canvas id="initCanvas" class="canvas-img"></canvas>
+<script type="text/javascript">
+    var imagesEl = document.getElementById("images");
+    var canvas = document.getElementById('initCanvas'),
+            image = new Image(),
+            cols,
+            rows;
+
+    image.src = "../img/beatles.jpg";
+
+    window.onload = function () {
+        cols = image.width;
+        rows = image.height;
+        canvas.width = cols;
+        canvas.height = rows;
+        var context = canvas.getContext('2d');
+        context.drawImage(image, 0, 0, image.width, image.height);
+
+        jsfeat.bbf.prepare_cascade(jsfeat.bbf.face_cascade);
+
+        var imageData = context.getImageData(0, 0, cols, rows);
+        var mat = new jsfeat.matrix_t(cols, rows, jsfeat.U8C1_t);
+        jsfeat.imgproc.grayscale(imageData.data, cols, rows, mat);
+
+        var minWidth = 48, minHeight = 48, interval = 4;
+        var pyramid = jsfeat.bbf.build_pyramid(mat, minWidth, minHeight, interval);
+
+        var bb = jsfeat.bbf.detect(pyramid, jsfeat.bbf.face_cascade);
+        bb = jsfeat.bbf.group_rectangles(bb, 1);
+
+        drawFaces(context, bb, 4);
+    };
+
+    function drawFaces(context, bb, maxFaceNumber) {
+        jsfeat.math.qsort(bb, 0, bb.length - 1, function (a, b) {
+            return (b.confidence < a.confidence);
+        });
+        for (var i = 0; i < Math.min(maxFaceNumber, bb.length); ++i) {
+            var b = bb[i];
+            context.lineWidth = 3;
+            context.globalAlpha = 0.6;
+            context.strokeStyle = "#fff";
+            context.strokeRect(b.x, b.y, b.width, b.height);
+        }
+    }
+</script>
+</body>
+</html>

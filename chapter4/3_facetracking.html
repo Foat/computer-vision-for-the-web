@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>chapter 4, face particles tracking.js</title>
+    <link rel="stylesheet" href="../css/cvw.css">
+    <script src="../js/tracking-min.js"></script>
+    <script src="../data/face-min.js"></script>
+    <script src="../data/eye-min.js"></script>
+    <script src="../data/mouth-min.js"></script>
+</head>
+<body>
+<canvas id="initCanvas" class="canvas-img"></canvas>
+<script>
+    var canvas = document.getElementById('initCanvas'),
+            image = new Image(),
+            cols,
+            rows;
+
+    function trackFaceParticle(type, color) {
+        var tracker = new tracking.ObjectTracker([type]);
+        tracker.setStepSize(1.2);
+
+        tracker.on('track', function (event) {
+            event.data.forEach(function (rect) {
+                plot(rect.x, rect.y, rect.width, rect.height);
+            });
+        });
+
+        var canvas = document.getElementById('initCanvas');
+        var context = canvas.getContext('2d');
+
+        function plot(x, y, w, h) {
+            context.lineWidth = 3;
+            context.globalAlpha = 0.8;
+            context.strokeStyle = color;
+            context.strokeRect(x, y, w, h);
+        }
+
+        tracking.track('#initCanvas', tracker);
+    }
+
+    image.onload = function () {
+        cols = image.width;
+        rows = image.height;
+        canvas.width = cols;
+        canvas.height = rows;
+        var context = canvas.getContext('2d');
+        context.drawImage(image, 0, 0, image.width, image.height);
+
+        trackFaceParticle('face', '#AFF65C');
+        trackFaceParticle('eye', '#7494FF');
+        trackFaceParticle('mouth', '#FF9274');
+    };
+    image.src = "../img/beatles.jpg";
+</script>
+</body>
+</html>

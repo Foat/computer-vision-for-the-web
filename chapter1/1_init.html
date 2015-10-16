@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>chapter 1, matrix init</title>
+    <script src="../js/jsfeat-min.js"></script>
+</head>
+<body>
+<script>
+    var matrix = new jsfeat.matrix_t(3, 3, jsfeat.U8_t | jsfeat.C1_t);
+    matrix.data[1] = 1;
+    matrix.data[5] = 2;
+    matrix.data[7] = 1;
+
+    for (var i = 0; i < matrix.rows; ++i) {
+        var start = i * matrix.cols;
+        console.log(matrix.data.subarray(start, start + matrix.cols));
+    }
+</script>
+</body>
+</html>

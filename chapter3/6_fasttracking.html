@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>chapter 3, feature detection tracking.js</title>
+    <link rel="stylesheet" href="../css/cvw.css">
+    <script src="../js/tracking-min.js"></script>
+</head>
+<body>
+<div id="images" class="canvas-parent">
+    <canvas id="initCanvas" class="canvas-img"></canvas>
+</div>
+
+<script>
+    var canvas = document.getElementById('initCanvas'),
+            context = canvas.getContext('2d'),
+            image = new Image(),
+            cols,
+            rows;
+
+    image.src = '../img/flowers-with-castle.jpg';
+
+    function findFeatures() {
+        tracking.Fast.THRESHOLD = 30;
+        var imageData = context.getImageData(0, 0, cols, rows);
+        var gray = tracking.Image.grayscale(imageData.data, cols, rows, true);
+        var blurred4 = tracking.Image.blur(gray, cols, rows, 3);
+
+        var blurred1 = new Array(blurred4.length / 4);
+        for (var i = 0, j = 0; i < blurred4.length; i += 4, ++j) {
+            blurred1[j] = blurred4[i];
+        }
+
+        var corners = tracking.Fast.findCorners(blurred1, cols, rows);
+        for (i = 0; i < corners.length; i += 2) {
+            context.fillStyle = '#0f0';
+            context.fillRect(corners[i], corners[i + 1], 3, 3);
+        }
+    }
+
+    window.onload = function () {
+        cols = image.width;
+        rows = image.height;
+        canvas.width = cols;
+        canvas.height = rows;
+        context.drawImage(image, 0, 0, image.width, image.height);
+        findFeatures();
+    }
+</script>
+</body>
+</html>

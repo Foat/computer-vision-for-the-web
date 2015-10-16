@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>chapter 3, basic color tracker</title>
+    <link rel="stylesheet" href="../css/cvw.css">
+    <script src="../js/tracking-min.js"></script>
+</head>
+<body>
+<div id="images" class="canvas-parent">
+    <img id="img" src="../img/bee-191629_1920.jpg"/>
+</div>
+<script>
+    function trackColor() {
+        var canvas = document.getElementById('img');
+        var tracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow']);
+
+        tracker.on('track', function (event) {
+            event.data.forEach(function (rect) {
+                draw(rect.x, rect.y, rect.width, rect.height, rect.color);
+            });
+        });
+
+        var canvasParent = document.querySelector('.canvas-parent');
+
+        function draw(x, y, w, h, color) {
+            var rect = document.createElement('div');
+            canvasParent.appendChild(rect);
+            rect.classList.add('rect');
+            rect.style.border = '8px solid ' + color;
+            rect.style.width = -10 + w + 'px';
+            rect.style.height = -10 + h + 'px';
+            rect.style.left = (canvas.offsetLeft + x) + 'px';
+            rect.style.top = (canvas.offsetTop + y) + 'px';
+            rect.style.position = 'absolute';
+        }
+
+        tracking.track('#img', tracker);
+    }
+
+    window.onload = function () {
+        trackColor();
+    };
+</script>
+</body>
+</html>

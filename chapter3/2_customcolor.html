@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>chapter 3, track custom color</title>
+    <link rel="stylesheet" href="../css/cvw.css">
+    <script src="../js/tracking-min.js"></script>
+</head>
+<body>
+<div id="images" class="canvas-parent">
+    <canvas id="initCanvas" class="canvas-img"></canvas>
+</div>
+<script>
+    function trackCustomColor() {
+        var canvas = document.getElementById('initCanvas');
+        tracking.ColorTracker.registerColor('darkRed', function (r, g, b) {
+            return r > 100 && g < 90 && b < 90;
+        });
+        var tracker = new tracking.ColorTracker(['darkRed']);
+
+        tracker.on('track', function (event) {
+            event.data.forEach(function (rect) {
+                draw(rect.x, rect.y, rect.width, rect.height, rect.color);
+            });
+        });
+
+        var canvasParent = document.querySelector('.canvas-parent');
+
+        function draw(x, y, w, h, color) {
+            var rect = document.createElement('div');
+            canvasParent.appendChild(rect);
+            rect.classList.add('rect');
+            rect.style.border = '8px solid ' + color;
+            rect.style.width = -10 + w + 'px';
+            rect.style.height = -10 + h + 'px';
+            rect.style.left = (canvas.offsetLeft + x) + 'px';
+            rect.style.top = (canvas.offsetTop + y) + 'px';
+            rect.style.position = 'absolute';
+        }
+
+        tracking.track('#initCanvas', tracker);
+    }
+
+    var image = new Image();
+    image.onload = function () {
+        var canvas = document.getElementById('initCanvas');
+        canvas.width = image.width;
+        canvas.height = image.height;
+        var context = canvas.getContext('2d');
+        context.drawImage(image, 0, 0, image.width, image.height);
+        trackCustomColor();
+    };
+    image.src = '../img/red_delicious_red_chief_apple.jpg';
+</script>
+</body>
+</html>

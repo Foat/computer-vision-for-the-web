@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>chapter 3, feature detection jsfeat</title>
+    <link rel="stylesheet" href="../css/cvw.css">
+    <script src="../js/jsfeat-min.js"></script>
+</head>
+<body>
+<div id="images" class="canvas-parent">
+    <canvas id="initCanvas" class="canvas-img"></canvas>
+</div>
+
+<script>
+    var canvas = document.getElementById('initCanvas'),
+            context = canvas.getContext('2d'),
+            image = new Image(),
+            cols,
+            rows;
+
+    image.src = '../img/flowers-with-castle.jpg';
+
+    function findFeatures() {
+        jsfeat.fast_corners.set_threshold(30);
+        var imageData = context.getImageData(0, 0, cols, rows);
+
+        var dataBuffer = new jsfeat.data_t(cols * rows, imageData.data.buffer);
+        var mat = new jsfeat.matrix_t(cols, rows, jsfeat.U8C4_t, dataBuffer);
+        var matGray = new jsfeat.matrix_t(mat.cols, mat.rows, jsfeat.U8C1_t);
+        jsfeat.imgproc.grayscale(mat.data, mat.cols, mat.rows, matGray);
+        var matBlurred = new jsfeat.matrix_t(mat.cols, mat.rows, jsfeat.U8C1_t);
+
+        jsfeat.imgproc.gaussian_blur(matGray, matBlurred, 3);
+        var corners = [];
+        var i = cols * rows;
+        while (--i >= 0) {
+            corners[i] = new jsfeat.keypoint_t(0, 0, 0, 0, -1);
+        }
+
+        var count = jsfeat.fast_corners.detect(matBlurred, corners, 3);
+        for (i = 0; i < count; i++) {
+            context.fillStyle = '#0f0';
+            context.fillRect(corners[i].x, corners[i].y, 3, 3);
+        }
+    }
+
+    window.onload = function () {
+        cols = image.width;
+        rows = image.height;
+        canvas.width = cols;
+        canvas.height = rows;
+        context.drawImage(image, 0, 0, image.width, image.height);
+        findFeatures();
+    }
+</script>
+</body>
+</html>

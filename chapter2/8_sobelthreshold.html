@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>chapter 2, sobel threshold</title>
+    <script src="../js/tracking-min.js"></script>
+    <script src="../js/common-tr.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/cvw.css">
+</head>
+<body>
+<div id="images" class="canvas-parent">
+    <canvas id="initCanvas" class="canvas-img"></canvas>
+</div>
+<script>
+    var canvas = document.getElementById('initCanvas'),
+            context = canvas.getContext('2d'),
+            image = new Image();
+    image.src = '../img/flowers-with-castle.jpg';
+
+    function thresholdArray(arr, threshold) {
+        for (var i = 0; i < arr.length; i += 4) {
+            arr[i] = arr[i] > threshold ? 255 : 0;
+            arr[i + 1] = arr[i + 1] > threshold ? 255 : 0;
+            arr[i + 2] = arr[i + 2] > threshold ? 255 : 0;
+        }
+    }
+
+    image.onload = function () {
+        var cols = image.width;
+        var rows = image.height;
+        canvas.width = cols;
+        canvas.height = rows;
+        context.drawImage(image, 0, 0, image.width, image.height, 0, 0, cols, rows);
+        var canvasParent = document.getElementById('images');
+
+        var imageData = context.getImageData(0, 0, cols, rows);
+        var gray = tracking.Image.grayscale(imageData.data, cols, rows, true);
+
+        var sobelImg = tracking.Image.sobel(gray, cols, rows);
+        drawImg(sobelImg, cols, rows, canvasParent, 'canvas-img');
+
+        thresholdArray(sobelImg, 200);
+
+        drawImg(sobelImg, cols, rows, canvasParent, 'canvas-img');
+    };
+</script>
+</body>
+</html>

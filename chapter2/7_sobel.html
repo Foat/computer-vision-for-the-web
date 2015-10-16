@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>chapter 2, sobel filter</title>
+    <script src="../js/jsfeat-min.js"></script>
+    <script src="../js/tracking-min.js"></script>
+    <script src="../js/common-tr.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/cvw.css">
+</head>
+<body>
+<div id="images" class="canvas-parent">
+    <canvas id="initCanvas" class="canvas-img"></canvas>
+</div>
+<script>
+    var canvas = document.getElementById('initCanvas'),
+            context = canvas.getContext('2d'),
+            image = new Image();
+    image.src = '../img/flowers-with-castle.jpg';
+
+    function drawDerivatives(mat, parent, cnvStyle) {
+        var cnv = document.createElement('canvas');
+        if (typeof cnvStyle !== 'undefined')
+            cnv.className = cnvStyle;
+        cnv.width = mat.cols;
+        cnv.height = mat.rows;
+
+        parent.appendChild(cnv);
+        var ctx = cnv.getContext('2d');
+
+        var imageData = new ImageData(mat.cols, mat.rows);
+
+        var dataU32 = new Uint32Array(imageData.data.buffer);
+        var i = mat.cols * mat.rows, pix = 0, gx = 0, gy = 0;
+        while (--i >= 0) {
+            gx = Math.abs(mat.data[i << 1] >> 2) & 0xff;
+            gy = Math.abs(mat.data[(i << 1) + 1] >> 2) & 0xff;
+            pix = ((gx + gy) >> 1) & 0xff;
+            dataU32[i] = (pix << 24) | (gx << 16) | (0 << 8) | gy;
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+    }
+
+    image.onload = function () {
+        var cols = image.width;
+        var rows = image.height;
+        canvas.width = cols;
+        canvas.height = rows;
+        context.drawImage(image, 0, 0, image.width, image.height, 0, 0, cols, rows);
+        var canvasParent = document.getElementById('images');
+
+        var imageData = context.getImageData(0, 0, cols, rows);
+        var gray = tracking.Image.grayscale(imageData.data, cols, rows, true);
+
+        var sobelSignVector = [-1, 0, 1];
+        var sobelScaleVector = [1, 2, 1];
+        var horizontal = tracking.Image.separableConvolve(gray, cols, rows, sobelScaleVector, sobelSignVector, true);
+        var vertical = tracking.Image.separableConvolve(gray, cols, rows, sobelSignVector, sobelScaleVector, true);
+        drawImg(horizontal, cols, rows, canvasParent, 'canvas-img');
+        drawImg(vertical, cols, rows, canvasParent, 'canvas-img');
+
+        var dataBuffer = new jsfeat.data_t(cols * rows, imageData.data.buffer);
+        var mat = new jsfeat.matrix_t(cols, rows, jsfeat.U8C4_t, dataBuffer);
+        var matGray = new jsfeat.matrix_t(mat.cols, mat.rows, jsfeat.U8C1_t);
+        jsfeat.imgproc.grayscale(mat.data, mat.cols, mat.rows, matGray);
+
+        var imgGxGy = new jsfeat.matrix_t(cols, rows, jsfeat.S32C2_t);
+        jsfeat.imgproc.sobel_derivatives(matGray, imgGxGy);
+
+        drawDerivatives(imgGxGy, canvasParent, 'canvas-img');
+
+        var sobelImg = tracking.Image.sobel(gray, cols, rows);
+        drawImg(sobelImg, cols, rows, canvasParent, 'canvas-img');
+    };
+</script>
+</body>
+</html>

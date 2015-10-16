@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>chapter 2, gaussian filter combinations 1</title>
+    <script src="../js/jsfeat-min.js"></script>
+    <script src="../js/tracking-min.js"></script>
+    <script src="../js/common-tr.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/cvw.css">
+</head>
+<body>
+<div id="images" class="canvas-parent">
+    <canvas id="initCanvas" class="canvas-img"></canvas>
+</div>
+<script>
+    var canvas = document.getElementById('initCanvas'),
+            context = canvas.getContext('2d'),
+            image = new Image();
+    image.src = '../img/flowers-with-castle.jpg';
+
+    image.onload = function () {
+        var cols = image.width;
+        var rows = image.height;
+        canvas.width = cols;
+        canvas.height = rows;
+        context.drawImage(image, 0, 0, image.width, image.height, 0, 0, cols, rows);
+
+        var imageData = context.getImageData(0, 0, cols, rows);
+
+        var kernelSize = 3,// 45 for a better view
+                sigma = 0, kernelArray = [], dataType = jsfeat.F32_t;
+        jsfeat.math.get_gaussian_kernel(kernelSize, sigma, kernelArray, dataType);
+
+        console.log(kernelArray);
+
+        var gaussianKernel = new jsfeat.data_t(kernelArray.length, kernelArray);
+        var A = new jsfeat.matrix_t(1, kernelSize, jsfeat.F32C1_t, gaussianKernel),
+                B = new jsfeat.matrix_t(kernelSize, 1, jsfeat.F32C1_t, gaussianKernel),
+                C = new jsfeat.matrix_t(kernelSize, kernelSize, jsfeat.F32C1_t);
+        jsfeat.matmath.multiply(C, A, B);
+
+        console.log(C.data);
+
+        var canvasParent = document.getElementById('images');
+
+        var gray = tracking.Image.grayscale(imageData.data, cols, rows, true);
+
+        // separate convolutions
+        var buf = tracking.Image.horizontalConvolve(gray, cols, rows, kernelArray, true);
+        buf = tracking.Image.verticalConvolve(buf, cols, rows, kernelArray, true);
+        drawImg(buf, cols, rows, canvasParent, 'canvas-img');
+
+        buf = tracking.Image.horizontalConvolve(gray, cols, rows, kernelArray, true);
+        drawImg(buf, cols, rows, canvasParent, 'canvas-img');
+
+        buf = tracking.Image.verticalConvolve(gray, cols, rows, kernelArray, true);
+        drawImg(buf, cols, rows, canvasParent, 'canvas-img');
+    };
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>chapter 4, haar face detection with jsfeat</title>
+    <link rel="stylesheet" href="../css/cvw.css">
+    <script src="../js/jsfeat-min.js"></script>
+    <script src="../data/frontalface.js"></script>
+</head>
+<body>
+<canvas id="initCanvas" class="canvas-img"></canvas>
+<script type="text/javascript">
+    var imagesEl = document.getElementById("images");
+    var canvas = document.getElementById('initCanvas'),
+            image = new Image(),
+            cols,
+            rows;
+
+    image.src = "../img/beatles.jpg";
+
+    window.onload = function () {
+        cols = image.width;
+        rows = image.height;
+        canvas.width = cols;
+        canvas.height = rows;
+        var context = canvas.getContext('2d');
+        context.drawImage(image, 0, 0, image.width, image.height);
+
+        var classifier = jsfeat.haar.frontalface;
+
+        var imageData = context.getImageData(0, 0, cols, rows);
+        var mat = new jsfeat.matrix_t(cols, rows, jsfeat.U8C1_t);
+        jsfeat.imgproc.grayscale(imageData.data, cols, rows, mat);
+
+        jsfeat.imgproc.equalize_histogram(mat, mat);
+        jsfeat.imgproc.gaussian_blur(mat, mat, 3);
+
+        var integralSum = new Int32Array((cols + 1) * (rows + 1));
+        var integralSqSum = new Int32Array((cols + 1) * (rows + 1));
+        var integralTilted = new Int32Array((cols + 1) * (rows + 1));
+
+        jsfeat.imgproc.compute_integral_image(mat, integralSum, integralSqSum, classifier.tilted ? integralTilted : null);
+
+        var integralCanny = new Int32Array((cols + 1) * (rows + 1));
+        var edges = new jsfeat.matrix_t(cols, rows, jsfeat.U8C1_t);
+        jsfeat.imgproc.canny(mat, edges, 10, 50);
+        jsfeat.imgproc.compute_integral_image(edges, integralCanny, null, null);
+
+        jsfeat.haar.edges_density = 0.13;
+
+        var minScale = 2;
+        var scaleFactor = 1.1;
+
+        var bb = jsfeat.haar.detect_multi_scale(integralSum, integralSqSum, integralTilted, integralCanny,
+                mat.cols, mat.rows, classifier, scaleFactor, minScale);
+        bb = jsfeat.haar.group_rectangles(bb, 1);
+
+        drawFaces(context, bb, 4);
+    };
+
+    function drawFaces(context, bb, maxFaceNumber) {
+        jsfeat.math.qsort(bb, 0, bb.length - 1, function (a, b) {
+            return (b.confidence < a.confidence);
+        });
+        for (var i = 0; i < Math.min(maxFaceNumber, bb.length); ++i) {
+            var b = bb[i];
+            context.lineWidth = 3;
+            context.globalAlpha = 0.6;
+            context.strokeStyle = "#fff";
+            context.strokeRect(b.x, b.y, b.width, b.height);
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>chapter 1, linear algebra</title>
+    <script src="../js/jsfeat-min.js"></script>
+</head>
+<body>
+<script>
+    var bufA = [9, 6, -3, 2, -2, 4, -2, 1, -2],
+            bufB = [6, -4, 0];
+
+    var A = new jsfeat.matrix_t(3, 3, jsfeat.F32_t | jsfeat.C1_t, new jsfeat.data_t(bufA.length, bufA));
+    var B = new jsfeat.matrix_t(3, 1, jsfeat.F32_t | jsfeat.C1_t, new jsfeat.data_t(bufB.length, bufB));
+    //    var X = new jsfeat.matrix_t(3, 1, jsfeat.F32_t | jsfeat.C1_t);
+
+    jsfeat.linalg.lu_solve(A, B);
+    console.log(B.data);
+    //    jsfeat.linalg.svd_solve(A, X, B);
+    //    console.log(X.data);
+</script>
+</body>
+</html>

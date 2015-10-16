@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>chapter 1, matrix multiplication</title>
+    <script src="../js/jsfeat-min.js"></script>
+</head>
+<body>
+<script>
+    var A = new jsfeat.matrix_t(2, 3, jsfeat.S32_t | jsfeat.C1_t);
+    var B = new jsfeat.matrix_t(3, 2, jsfeat.S32_t | jsfeat.C1_t);
+    var C = new jsfeat.matrix_t(3, 3, jsfeat.S32_t | jsfeat.C1_t);
+    for (var i = 0; i < A.data.length; ++i) {
+        A.data[i] = i + 1;
+        B.data[i] = B.data.length / 2 - i;
+    }
+    jsfeat.matmath.multiply(C, A, B);
+
+    for (i = 0; i < A.rows; ++i) {
+        var startA = i * A.cols,
+                startB = i * B.cols,
+                rowB = B.rows > i ? B.data.subarray(startB, startB + B.cols) : [];
+
+        console.log(A.data.subarray(startA, startA + A.cols), rowB,
+                C.data.subarray(startA, startA + C.cols));
+    }
+</script>
+</body>
+</html>

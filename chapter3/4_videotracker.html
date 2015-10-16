@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>chapter 3, tracking color on a video</title>
+    <link rel="stylesheet" href="../css/cvw.css">
+    <style>
+        video, canvas {
+            position: absolute;
+        }
+    </style>
+    <script src="../js/tracking-min.js"></script>
+</head>
+<body>
+<div id="images" class="canvas-parent">
+    <video id="video" width="640" height="480" preload autoplay loop muted controls>
+    </video>
+    <canvas id="initCanvas" class="canvas-img" width="640" height="480"></canvas>
+</div>
+<script>
+    function trackOnVideo() {
+        var canvas = document.getElementById('initCanvas');
+        var context = canvas.getContext('2d');
+
+        var tracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow']);
+        tracker.on('track', function (event) {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            event.data.forEach(function (rect) {
+                draw(rect.x, rect.y, rect.width, rect.height, rect.color);
+            });
+        });
+        tracker.setMinDimension(5);
+
+        function draw(x, y, w, h, color) {
+            context.strokeStyle = color;
+            context.strokeRect(x, y, w, h);
+            context.fillStyle = "#fff";
+            context.fillText('x: ' + x + 'px', x + w + 5, y + 11);
+            context.fillText('y: ' + y + 'px', x + w + 5, y + 22);
+        }
+
+//        tracking.track('#video', tracker);
+        tracking.track('#video', tracker, {camera: true});
+    }
+
+    window.onload = function () {
+        trackOnVideo();
+    };
+</script>
+</body>
+</html>

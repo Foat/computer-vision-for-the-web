@@ -1,0 +1,96 @@
+<html>
+<head>
+    <title>chapter 5, oflow</title>
+    <script src="../js/oflow.js"></script>
+</head>
+<body>
+<div>
+    <video id='videoOut' width='640px' height='360px' autoplay loop muted>
+        <source src="../video/StarWars_intro.mp4">
+    </video>
+    <canvas id='ballScene' width='320px' height='190px'></canvas>
+    <button onclick="webCamFlow.stopCapture();videoElement.pause();">Stop</button>
+    <button onclick="webCamFlow.startCapture();videoElement.play();">Resume</button>
+</div>
+<canvas id='flow' width='640px' height='360px'></canvas>
+
+<script type="text/javascript">
+    var zoneSize = 16;
+    var videoElement = document.getElementById('videoOut');
+    var webCamFlow = new oflow.VideoFlow(videoElement, zoneSize);
+
+    window.onload = function () {
+        var flowCanvas = document.getElementById('flow'),
+                ballCanvas = document.getElementById('ballScene'),
+                flowContext = flowCanvas.getContext('2d'),
+                ballContext = ballCanvas.getContext('2d'),
+                sceneWidth = flowCanvas.width,
+                sceneHeight = flowCanvas.height,
+                ballSceneW = ballCanvas.width,
+                ballSceneH = ballCanvas.height,
+                ballX = ballSceneW / 2,
+                ballY = ballSceneH / 2;
+
+        // http://stackoverflow.com/questions/8211745/draw-an-arrow-on-html5-canvas-between-two-objects
+        function drawArrow(ctx, p1, p2, size) {
+            ctx.save();
+
+            // Rotate the context to point along the path
+            var dx = p2.x - p1.x, dy = p2.y - p1.y, len = Math.sqrt(dx * dx + dy * dy);
+            ctx.translate(p2.x, p2.y);
+            ctx.rotate(Math.atan2(dy, dx));
+
+            ctx.lineWidth = 3;
+            // line
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-len, 0);
+            ctx.closePath();
+            ctx.stroke();
+
+            // arrowhead
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-size, -size);
+            ctx.lineTo(-size, size);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        webCamFlow.onCalculated(function (direciton) {
+            // render zones
+            flowContext.clearRect(0, 0, sceneWidth, sceneHeight);
+            for (var i = 0; i < direciton.zones.length; ++i) {
+                var zone = direciton.zones[i];
+                drawArrow(flowContext, zone, {x: zone.x + zone.u * 4, y: zone.y + zone.v * 4}, 5);
+            }
+            // render ball:
+            ballContext.clearRect(0, 0, ballSceneW, ballSceneH);
+            ballContext.beginPath();
+            ballX -= direciton.u;
+            ballY += direciton.v;
+            if (ballX < 0) {
+                ballX = ballSceneW;
+            }
+            if (ballX > ballSceneW) {
+                ballX = 0;
+            }
+            if (ballY < 0) {
+                ballY = ballSceneH;
+            }
+            if (ballY > ballSceneH) {
+                ballY = 0;
+            }
+            ballContext.arc(ballX, ballY, 10, 0, 2 * Math.PI, false);
+            ballContext.fillStyle = 'yellow';
+            ballContext.fill();
+            ballContext.stroke();
+        });
+
+        webCamFlow.startCapture();
+    }
+</script>
+</body>
+</html>

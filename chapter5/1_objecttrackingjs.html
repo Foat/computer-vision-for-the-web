@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>chapter 5, simple object tracking with tracking.js</title>
+    <link rel="stylesheet" href="../css/cvw.css">
+    <style>
+        video, .canvas-img {
+            position: absolute;
+            z-index: 10001;
+        }
+
+        #canvas {
+            width: 640px;
+            height: 360px;
+            position: absolute;
+            left: 0;
+            top: 400px;
+        }
+    </style>
+    <script src="../js/tracking-min.js"></script>
+</head>
+<body>
+<div id="images" class="canvas-parent">
+    <video id='video' width='640px' height='360px' preload autoplay loop muted>
+        <source src="../video/SLoP.mp4">
+    </video>
+    <canvas id="initCanvas" class="canvas-img" width='640px' height='360px'></canvas>
+</div>
+<canvas id='canvas' width='640px' height='360px'></canvas>
+
+<script>
+    window.onload = function () {
+        var ballCanvas = document.getElementById('canvas'),
+                ballCtx = ballCanvas.getContext('2d'),
+                ballSceneW = ballCanvas.width,
+                ballSceneH = ballCanvas.height,
+                ballX = ballSceneW / 2,
+                ballY = ballSceneH / 2;
+
+        var canvas = document.getElementById('initCanvas'),
+                context = canvas.getContext('2d');
+
+        var tracker = new tracking.ColorTracker(['yellow']);
+        tracker.setMinDimension(20);
+        tracker.on('track', function (event) {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            ballCtx.clearRect(0, 0, ballSceneW, ballSceneH);
+            if (event.data.length > 0)
+                move(event.data[0]);
+        });
+        function move(rect) {
+            ballCtx.beginPath();
+            ballX = rect.x + rect.width / 2;
+            ballY = rect.y + rect.height / 2;
+            ballCtx.arc(ballX, ballY, 30, 0, 2 * Math.PI, false);
+            ballCtx.fillStyle = 'yellow';
+            ballCtx.fill();
+            ballCtx.stroke();
+
+            context.strokeStyle = rect.color;
+            context.lineWidth = 10;
+            context.strokeRect(rect.x, rect.y, rect.width, rect.height);
+        }
+
+        tracker.setMinDimension(50);
+
+        tracking.track('#video', tracker);
+    };
+</script>
+
+</body>
+</html>

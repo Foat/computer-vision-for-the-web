@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>chapter 2, tracking.js grayscale</title>
+    <script src="../js/tracking-min.js"></script>
+</head>
+<body>
+<canvas id="initCanvas"></canvas>
+<script>
+    var canvas = document.getElementById('initCanvas'),
+            context = canvas.getContext('2d'),
+            image = new Image();
+    image.src = '../img/flowers-with-castle.jpg';
+
+    image.onload = function () {
+        var cols = image.width;
+        var rows = image.height;
+        canvas.width = cols;
+        canvas.height = rows;
+        context.drawImage(image, 0, 0, image.width, image.height, 0, 0, cols, rows);
+        var imageData = context.getImageData(0, 0, cols, rows);
+
+        var gray = tracking.Image.grayscale(imageData.data, cols, rows, true);
+
+        context.putImageData(new ImageData(gray, cols, rows), 0, 0);
+    };
+</script>
+</body>
+</html>

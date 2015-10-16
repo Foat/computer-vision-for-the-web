@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>chapter 5, oflow with jsfeat</title>
+    <script src="../js/jsfeat-min.js"></script>
+    <script src="../js/compatibility.js"></script>
+</head>
+<body>
+<video id="vid" width="640" height="360" loop muted autoplay style="display: none">
+    <source src="../video/StarWars_intro.mp4">
+</video>
+<div>
+    <canvas id="canvas" width="640" height="360"></canvas>
+</div>
+<button onclick="video.pause();">Stop</button>
+<button onclick="video.play();">Resume</button>
+
+<script type="text/javascript">
+    var video = document.getElementById('vid');
+
+    window.onload = function () {
+        "use strict";
+
+        var canvas = document.getElementById('canvas');
+        try {
+            init();
+            compatibility.requestAnimationFrame(process);
+        } catch (error) {
+            console.log(error);
+        }
+
+        var context, canvasWidth, canvasHeight;
+        var curr_pyr, prev_pyr, count, status, prev_xy, curr_xy;
+
+        function init() {
+            canvasWidth = canvas.width;
+            canvasHeight = canvas.height;
+            context = canvas.getContext('2d');
+
+            context.fillStyle = "rgb(0,255,0)";
+
+            curr_pyr = new jsfeat.pyramid_t(3);
+            prev_pyr = new jsfeat.pyramid_t(3);
+            curr_pyr.allocate(canvasWidth, canvasHeight, jsfeat.U8C1_t);
+            prev_pyr.allocate(canvasWidth, canvasHeight, jsfeat.U8C1_t);
+
+            count = 0;
+            status = new Uint8Array(100);
+            prev_xy = new Float32Array(100 * 2);
+            curr_xy = new Float32Array(100 * 2);
+        }
+
+        function process() {
+            compatibility.requestAnimationFrame(process);
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                context.drawImage(video, 0, 0, canvasWidth, canvasHeight);
+                var imageData = context.getImageData(0, 0, canvasWidth, canvasHeight);
+
+                var _points = prev_xy;
+                prev_xy = curr_xy;
+                curr_xy = _points;
+                var _pyr = prev_pyr;
+                prev_pyr = curr_pyr;
+                curr_pyr = _pyr;
+
+                jsfeat.imgproc.grayscale(imageData.data, canvasWidth, canvasHeight, curr_pyr.data[0]);
+                curr_pyr.build(curr_pyr.data[0], true);
+
+                var win_size = 20;
+                var max_iter = 30;
+                var eps = 0.01;
+                var min_eigen_threshold = 0.001;
+                jsfeat.optical_flow_lk.track(prev_pyr, curr_pyr, prev_xy, curr_xy, count,
+                        win_size, max_iter, status, eps, min_eigen_threshold);
+
+                prune_oflow_points(context);
+            }
+        }
+
+        function on_canvas_click(e) {
+            var coords = canvas.relMouseCoords(e);
+            if (coords.x > 0 & coords.y > 0 & coords.x < canvasWidth && coords.y < canvasHeight) {
+                curr_xy[count << 1] = coords.x;
+                curr_xy[(count << 1) + 1] = coords.y;
+                count++;
+            }
+        }
+
+        canvas.addEventListener('click', on_canvas_click, false);
+
+        function draw_circle(ctx, x, y) {
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, Math.PI * 2, false);
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        function prune_oflow_points(context) {
+            var n = count;
+            var i = 0, j = 0;
+
+            for (; i < n; ++i) {
+                if (status[i] == 1) {
+                    if (j < i) {
+                        curr_xy[j << 1] = curr_xy[i << 1];
+                        curr_xy[(j << 1) + 1] = curr_xy[(i << 1) + 1];
+                    }
+                    draw_circle(context, curr_xy[j << 1], curr_xy[(j << 1) + 1]);
+                    ++j;
+                }
+            }
+            count = j;
+        }
+
+        function relMouseCoords(event) {
+            var totalOffsetX = 0, totalOffsetY = 0, canvasX = 0, canvasY = 0;
+            var currentElement = this;
+
+            do {
+                totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
+                totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
+            } while (currentElement = currentElement.offsetParent);
+
+            canvasX = event.pageX - totalOffsetX;
+            canvasY = event.pageY - totalOffsetY;
+
+            return {x: canvasX, y: canvasY}
+        }
+
+        HTMLCanvasElement.prototype.relMouseCoords = relMouseCoords;
+    };
+</script>
+</body>
+</html>

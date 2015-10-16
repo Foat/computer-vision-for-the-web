@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js canvas - geometry - cube</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            font-family: Monospace;
+            background-color: #f0f0f0;
+            margin: 0px;
+            overflow: hidden;
+        }
+    </style>
+    <script src="../js/three.min.js"></script>
+    <script src="../js/Projector.js"></script>
+    <script src="../js/CanvasRenderer.js"></script>
+    <script src="../js/headtrackr.min.js"></script>
+</head>
+<body>
+<canvas id="compare" width="320" height="240" style="display:none"></canvas>
+<video id="vid" autoplay loop></video>
+
+<script>
+
+    var container;
+
+    var camera, scene, renderer;
+
+    var cube, plane;
+
+    var targetRotation = 0;
+    var targetRotationOnMouseDown = 0;
+
+    var mouseX = 0;
+    var mouseXOnMouseDown = 0;
+
+    var windowHalfX = window.innerWidth / 2;
+    var windowHalfY = window.innerHeight / 2;
+
+    init();
+    animate();
+
+    function init() {
+
+        container = document.createElement('div');
+        document.body.appendChild(container);
+
+        var info = document.createElement('div');
+        info.style.position = 'absolute';
+        info.style.top = '10px';
+        info.style.width = '100%';
+        info.style.textAlign = 'center';
+        info.innerHTML = 'Drag to spin the cube';
+        container.appendChild(info);
+
+        camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.y = 150;
+        camera.position.z = 500;
+
+        scene = new THREE.Scene();
+
+        // Cube
+
+        var geometry = new THREE.BoxGeometry(200, 200, 200);
+
+        for (var i = 0; i < geometry.faces.length; i += 2) {
+
+            var hex = Math.random() * 0xffffff;
+            geometry.faces[i].color.setHex(hex);
+            geometry.faces[i + 1].color.setHex(hex);
+
+        }
+
+        var material = new THREE.MeshBasicMaterial({vertexColors: THREE.FaceColors, overdraw: 0.5});
+
+        cube = new THREE.Mesh(geometry, material);
+        cube.position.y = 150;
+        scene.add(cube);
+
+        // Plane
+
+        var geometry = new THREE.PlaneBufferGeometry(200, 200);
+        geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
+
+        var material = new THREE.MeshBasicMaterial({color: 0xe0e0e0, overdraw: 0.5});
+
+        plane = new THREE.Mesh(geometry, material);
+        scene.add(plane);
+
+        renderer = new THREE.CanvasRenderer();
+        renderer.setClearColor(0xf0f0f0);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        document.addEventListener('mousedown', onDocumentMouseDown, false);
+        document.addEventListener('touchstart', onDocumentTouchStart, false);
+        document.addEventListener('touchmove', onDocumentTouchMove, false);
+
+        //
+
+        window.addEventListener('resize', onWindowResize, false);
+
+    }
+
+    function onWindowResize() {
+
+        windowHalfX = window.innerWidth / 2;
+        windowHalfY = window.innerHeight / 2;
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+    }
+
+    //
+
+    function onDocumentMouseDown(event) {
+
+        event.preventDefault();
+
+        document.addEventListener('mousemove', onDocumentMouseMove, false);
+        document.addEventListener('mouseup', onDocumentMouseUp, false);
+        document.addEventListener('mouseout', onDocumentMouseOut, false);
+
+        mouseXOnMouseDown = event.clientX - windowHalfX;
+        targetRotationOnMouseDown = targetRotation;
+
+    }
+
+    function onDocumentMouseMove(event) {
+
+        mouseX = event.clientX - windowHalfX;
+
+        targetRotation = targetRotationOnMouseDown + ( mouseX - mouseXOnMouseDown ) * 0.02;
+
+    }
+
+    function onDocumentMouseUp(event) {
+
+        document.removeEventListener('mousemove', onDocumentMouseMove, false);
+        document.removeEventListener('mouseup', onDocumentMouseUp, false);
+        document.removeEventListener('mouseout', onDocumentMouseOut, false);
+
+    }
+
+    function onDocumentMouseOut(event) {
+
+        document.removeEventListener('mousemove', onDocumentMouseMove, false);
+        document.removeEventListener('mouseup', onDocumentMouseUp, false);
+        document.removeEventListener('mouseout', onDocumentMouseOut, false);
+
+    }
+
+    function onDocumentTouchStart(event) {
+
+        if (event.touches.length === 1) {
+
+            event.preventDefault();
+
+            mouseXOnMouseDown = event.touches[0].pageX - windowHalfX;
+            targetRotationOnMouseDown = targetRotation;
+
+        }
+
+    }
+
+    function onDocumentTouchMove(event) {
+
+        if (event.touches.length === 1) {
+
+            event.preventDefault();
+
+            mouseX = event.touches[0].pageX - windowHalfX;
+            targetRotation = targetRotationOnMouseDown + ( mouseX - mouseXOnMouseDown ) * 0.05;
+
+        }
+
+    }
+
+    //
+
+    function animate() {
+
+        requestAnimationFrame(animate);
+
+        render();
+    }
+
+    function render() {
+
+        plane.rotation.y = cube.rotation.y += ( targetRotation - cube.rotation.y ) * 0.05;
+        renderer.render(scene, camera);
+
+    }
+
+</script>
+<script>
+    var videoInput = document.getElementById('vid');
+    var canvasInput = document.getElementById('compare');
+
+    // video styling
+    videoInput.style.position = 'absolute';
+    videoInput.style.top = '50px';
+    videoInput.style.zIndex = '100001';
+    videoInput.style.display = 'block';
+
+    /**
+     * Controls a THREE.js camera to create pseudo-3D effect
+     *
+     * Needs the position of "screen" in 3d-model to be given up front, and to be static (i.e. absolute) during headtracking
+     *
+     * @param {THREE.PerspectiveCamera} camera
+     * @param {number} scaling The scaling of the "screen" in the 3d model.
+     *   This is the vertical size of screen in 3d-model relative to vertical size of computerscreen in real life
+     * @param {array} fixedPosition array with attributes x,y,z, position of "screen" in 3d-model
+     * @param {THREE.Vector3} lookAt the object/position the camera should be pointed towards
+     * @param {object} params optional object with optional parameters
+     *
+     * Optional parameters:
+     *   screenHeight : vertical size of computer screen (default is 20 cm, i.e. typical laptop size)
+     */
+    realisticAbsoluteCameraControl = function (camera, scaling, fixedPosition, lookAt, params) {
+
+        if (params === undefined) params = {};
+        if (params.screenHeight === undefined) {
+            var screenHeight_cms = 20;
+        } else {
+            var screenHeight_cms = params.screenHeight;
+        }
+
+        camera.position.x = fixedPosition[0];
+        camera.position.y = fixedPosition[1];
+        camera.position.z = fixedPosition[2];
+        camera.lookAt(lookAt);
+
+        var wh = screenHeight_cms * scaling;
+        var ww = wh * camera.aspect;
+
+        document.addEventListener('headtrackingEvent', function (event) {
+            // update camera
+            var xOffset = event.x > 0 ? 0 : -event.x * 2 * scaling;
+            var yOffset = event.y < 0 ? 0 : event.y * 2 * scaling;
+            camera.setViewOffset(ww + Math.abs(event.x * 2 * scaling), wh + Math.abs(event.y * 2 * scaling), xOffset, yOffset, ww, wh);
+
+            camera.position.x = fixedPosition[0] + event.x * scaling;
+            camera.position.y = fixedPosition[1] + event.y * scaling;
+            camera.position.z = fixedPosition[2] + event.z * scaling;
+
+            // when changing height of window, we need to change field of view
+            camera.fov = Math.atan2(wh / 2 + Math.abs(event.y * scaling), Math.abs(event.z * scaling)) * 360 / Math.PI;
+            //debugger;
+
+            camera.updateProjectionMatrix();
+
+        }, false);
+    };
+
+    camera.far = 10000;
+    // set up camera controller
+    realisticAbsoluteCameraControl(camera, 30, [0, 150, 100], cube.position);
+    var htracker = new headtrackr.Tracker({
+        altVideo: {mp4: "../video/capture.mp4"}
+//        cameraOffset {number} : distance from camera to center of screen, used to offset position of head (default is 11.5)
+//        cameraOffset: 4,
+//        fov {number} : horizontal field of view of used camera in degrees (default is to estimate this)
+//        fov: 70
+    });
+    htracker.init(videoInput, canvasInput);
+    htracker.start();
+</script>
+</body>
+</html>
