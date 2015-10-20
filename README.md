@@ -2,6 +2,9 @@
 
 * Web browser (Google Chrome will be the best choice)
 
+## Code website
+http://foat.github.io/computer-vision-for-the-web
+
 ## Running files
 If you run files directly, without using a server, then you will, probably, want to run Chrome with an additional flag:
 
