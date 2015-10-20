@@ -1,0 +1,14 @@
+# Site wide configuration
+
+title: Computer Vision for The Web
+description: "Computer Vision for The Web book practical examples."
+
+# Site owner
+owner:
+  name: Foat Akhmadeev
+  email: foat.akhmadeev@gmail.com
+  web: http://foat.me
+  twitter: foat_akhmadeev
+  bio: "Software engineer and researcher."
+
+exclude: ["README.md", ".editorconfig", ".gitignore"]
