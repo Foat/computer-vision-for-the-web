@@ -3,7 +3,7 @@ layout: default
 ---
 
 ### Author's website
-[http://foat.me](http://foat.me)
+[https://foat.me](https://foat.me)
 
 ### Link to the book
 [https://www.packtpub.com/web-development/computer-vision-web](https://www.packtpub.com/web-development/computer-vision-web)

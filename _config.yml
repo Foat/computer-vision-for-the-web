@@ -7,8 +7,10 @@ description: "Computer Vision for the Web book practical examples."
 owner:
   name: Foat Akhmadeev
   email: foat.akhmadeev@gmail.com
-  web: http://foat.me
+  web: https://foat.me
   twitter: foat_akhmadeev
   bio: "Software engineer and researcher."
+  google:
+    analytics: UA-62776233-1
 
 exclude: ["README.md", ".editorconfig", ".gitignore"]
